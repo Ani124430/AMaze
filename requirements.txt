@@ -1,0 +1,4 @@
+flask                  # уеб framework-ът - прави сървъра и routes
+flask-sqlalchemy       # работа с базата данни чрез Python класове (без ръчен SQL)
+flask-jwt-extended     # JWT токени за автентикация (@jwt_required декоратор)
+werkzeug               # хеширане на пароли (идва с Flask, използваме го директно)
