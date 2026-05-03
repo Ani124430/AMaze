@@ -1,4 +1,4 @@
-from datatime import datatime, data, timedelta 
+from datetime import datetime, data, timedelta 
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db 
 
@@ -23,4 +23,25 @@ class User(db.Model):
             "id": self.id,
             "username": self.username, 
             "created_at": self.created_at.isoformat(),
+        }
+    
+class Habit(db.Model):
+    __tablename__ = "habits"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.String(500), default="")
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+
+    logs = db.relationship("HabitLog", backref="habit", lazy=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "created_at": self.created_at.isoformat(),
+            "is_active": self.is_active,
         }
