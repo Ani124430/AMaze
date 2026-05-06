@@ -51,7 +51,7 @@ class HabitLog(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     habit_id = db.Column(db.Integer, db.ForeignKey("habits.id"), nullable=False)
-    date = db.Column(db.Date, nullable=False, default=date.today)
+    date = db.Column(db.Date, nullable=False, default=data.today)
     completed_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
