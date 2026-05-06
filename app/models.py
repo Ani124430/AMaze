@@ -45,3 +45,19 @@ class Habit(db.Model):
             "created_at": self.created_at.isoformat(),
             "is_active": self.is_active,
         }
+    
+class HabitLog(db.Model):
+    __tablename__ = "habit_logs"
+
+    id = db.Column(db.Integer, primary_key=True)
+    habit_id = db.Column(db.Integer, db.ForeignKey("habits.id"), nullable=False)
+    date = db.Column(db.Date, nullable=False, default=date.today)
+    completed_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "habit_id": self.habit_id,
+            "date": self.date.isoformat(),
+            "completed_at": self.completed_at.isoformat(),
+        }
