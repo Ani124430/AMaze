@@ -12,6 +12,5 @@ def register():
         return jsonify({"error": "username и password са задължителни"}), 400
     
     if len(data["password"]) < 6:
-        return jsonify({"error": "Потребителското име вече съществува"}), 409
-    
+        return jsonify({"error": "Паролата трябва да е поне 6 символа"}), 400    
     
