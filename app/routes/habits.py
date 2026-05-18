@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from app import db 
 from app.models import Habit, HabitLog, User 
 
-habits_bp = Blueprint("habit", __name__)
+habits_bp = Blueprint("habits", __name__)
 
 def get_current_user():
     user_id = int(get_jwt_identity())
@@ -45,9 +45,9 @@ def create_habit():
 
 @habits_bp.route("/<int:habit_id>", methods=["GET"])
 @jwt_required()
-def get_habit():
+def get_habit(habit_id):
     user = get_current_user()
-    habit = Habit.query.filter_by(id = habit.id, user_id= user.id).first_or_404()
+    habit = Habit.query.filter_by(id = habit_id, user_id= user.id).first_or_404()
 
     d = habit.to_dict()
     d["completed_today"] = habit.completed_today() 
@@ -56,9 +56,9 @@ def get_habit():
 
 @habits_bp.route("/<int:habit_id>", methods=["PUT"])
 @jwt_required() 
-def update_habit():
+def update_habit(habit_id):
     user = get_current_user()
-    habit = Habit.query.filter_by(id = habit.id, user_id= user.id).first_or_404()
+    habit = Habit.query.filter_by(id = habit_id, user_id= user.id).first_or_404()
     data = request.get_json() or {}
 
     if "name" in data:
@@ -73,7 +73,31 @@ def update_habit():
 @jwt_required()
 def delete_habit(habit_id):
     user = get_current_user()
-    habit = Habit.query.filter_by(id = habit.id, user_id= user.id).first_or_404()
+    habit = Habit.query.filter_by(id = habit_id, user_id= user.id).first_or_404()
     habit.is_active = False
     db.session.commit()
     return jsonify({"message": f"Навикът '{habit.name}' е изтрит"}), 200
+
+@habits_bp.route("/<int:habit_id>/complete", methods=["POST"])
+@jwt_required() 
+def complete_habit(habit_id):
+    user = get_current_user()
+    habit = Habit.query.filter_by(id = habit_id, user_id = user.id, is_active = True).first_or_404()
+
+    today = date.today()
+    existing = HabitLog.query.filter_by(habit_id=habit_id, date=today).first()
+    if existing:
+        return jsonify({
+            "message": "Вече е маркиран за днес! 🎉",
+            "log": existing.to_dict(),
+            "current_streak": habit.current_streak(),
+        }), 200
+    log = HabitLog(habit_id = habit.id, date = today)
+    db.session.add(log)
+    db.session.commit()
+
+    return jsonify({
+        "message": "Браво! Навикът е изпълнен! ✅",
+        "log": log.to_dict(),
+        "current_streak": habit.current_streak(),
+    }), 201
