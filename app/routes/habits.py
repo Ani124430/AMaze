@@ -101,3 +101,16 @@ def complete_habit(habit_id):
         "log": log.to_dict(),
         "current_streak": habit.current_streak(),
     }), 201
+
+@habits_bp.route("/int:habit_id/history", methods = ["GET"])
+@jwt_required()
+def get_history(habit_id):
+    user = get_current_user()
+    habit = Habit.query.filter_by(id = habit_id, user_id = user.id).first_or_404()
+
+    days = request.args.get("days", 30, type = int)
+    since = date.today() - timedelta(days = days)
+
+    logs = (
+        HabitLog.query
+    )
