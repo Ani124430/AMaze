@@ -113,4 +113,6 @@ def get_history(habit_id):
 
     logs = (
         HabitLog.query
+        .filter(HabitLog.habit_id == habit_id, HabitLog.date >= since)
+        
     )
