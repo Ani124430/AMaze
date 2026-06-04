@@ -11,7 +11,15 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
-    jwt.init_app(app) 
+    jwt.init_app(app)
+
+    from app.routes.auth import auth_bp
+    from app.routes.habits import habits_bp
+    from app.routes.habit_logs import habit_logs_bp
+
+    app.register_blueprint(auth_bp, url_prefix="/auth")
+    app.register_blueprint(habits_bp, url_prefix="/habits") 
+    app.register_blueprint(habit_logs_bp, url_prefix="/habit-logs")
 
     with app.app_context():
         db.create_all()
