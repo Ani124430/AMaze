@@ -78,41 +78,57 @@ def delete_habit(habit_id):
     db.session.commit()
     return jsonify({"message": f"Навикът '{habit.name}' е изтрит"}), 200
 
-@habits_bp.route("/<int:habit_id>/complete", methods=["POST"])
-@jwt_required() 
-def complete_habit(habit_id):
-    user = get_current_user()
-    habit = Habit.query.filter_by(id = habit_id, user_id = user.id, is_active = True).first_or_404()
-
-    today = date.today()
-    existing = HabitLog.query.filter_by(habit_id=habit_id, date=today).first()
-    if existing:
-        return jsonify({
-            "message": "Вече е маркиран за днес! 🎉",
-            "log": existing.to_dict(),
-            "current_streak": habit.current_streak(),
-        }), 200
-    log = HabitLog(habit_id = habit.id, date = today)
-    db.session.add(log)
-    db.session.commit()
-
-    return jsonify({
-        "message": "Браво! Навикът е изпълнен! ✅",
-        "log": log.to_dict(),
-        "current_streak": habit.current_streak(),
-    }), 201
-
-@habits_bp.route("/int:habit_id/history", methods = ["GET"])
+@habits_bp.route("/<int:habit_id>/stats", methods=["GET"])
 @jwt_required()
-def get_history(habit_id):
+def get_stats(habit_id):
     user = get_current_user()
     habit = Habit.query.filter_by(id = habit_id, user_id = user.id).first_or_404()
 
-    days = request.args.get("days", 30, type = int)
-    since = date.today() - timedelta(days = days)
+    total = len(habit.logs) 
+    days_tracked = (date.today() - habit.created_at.date()).days + 1 
+    completion_rate = round((total/ days_tracked) * 100, 1) if days_tracked > 0 else 0 
 
-    logs = (
-        HabitLog.query
-        .filter(HabitLog.habit_id == habit_id, HabitLog.date >= since)
-        
-    )
+    week_data = [] 
+    for i in range(6,-1,-1):
+        d = date.today() - timedelta(days=i) 
+        done = any(log.date == d for log in habit.logs) 
+        week_data.append({"date": d.isoformat(), "completed": done})
+
+    return jsonify({
+            "habit": habit.to_dict(),
+            "total_completions": total, 
+            "days_tracked": days_tracked, 
+            "completion_rate_percent": completion_rate, 
+            "current_streak": habit.current_streak(),
+            "best_streak": habit.best_streak(),
+            "last_7_days": week_data,
+    }), 200
+
+@habits_bp.route("/stats", methods = ["GET"])
+@jwt_required()
+def get_all_stats():
+    user = get_current_user()
+    habits = Habit.query.filter_by(user_id = user.id, is_active = True).all()
+
+    result = [] 
+    for h in habits:
+        total = len(h.logs)
+        days_tracked = (date.today() - h.created_at.date()).days + 1
+        result.append({
+            "id": h.id, 
+            "name": h.name,
+            "total_completions": total, 
+            "completion_rate_percent": round((total/days_tracked) * 100, 1)if days_tracked>0 else 0,
+            "current_streak": h.current_streak(),
+            "best_streak": h.best_streak(),
+            "completed_today": h.completed_today(),
+        })
+
+    return jsonify({
+        "total_habits": len(result),
+            "habits": result,
+    }), 200
+
+
+
+
