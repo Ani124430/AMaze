@@ -5,7 +5,7 @@ from app.models import User
 
 auth_bp = Blueprint("auth", __name__)
 
-@auth_bp.route("/register", method = ["POST"])
+@auth_bp.route("/sign-up", methods = ["POST"])
 def register(): 
     data = request.get_json()
     if not data or not data.get ("username") or not data.get("password"):
@@ -18,14 +18,14 @@ def register():
         return jsonify({"error": "Потребителското име вече съществува"}), 409 
     
     user = User(username=data["username"])
-    user.set.password(data["password"])
+    user.set_password(data["password"])
     db.session.add(user)
     db.session.commit() 
 
     token = create_access_token(identity=str(user.id))
     return jsonify({"message": "Регистрацията е успешна!", "token": token, "user": user.to_dict()}), 201
 
-@auth_bp.route("/login", method = ["POST"])
+@auth_bp.route("/sign-in", methods = ["POST"])
 def login():
     data = request.get_json()
     if not data:
