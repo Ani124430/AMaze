@@ -54,7 +54,7 @@ def get_logs():
     logs = (
         HabitLog.query
         .filter(HabitLog.habit_id == habit_id, HabitLog.date >=since)
-        .oreder_by(HabitLog.date.desc())
+        .order_by(HabitLog.date.desc())
         .all()
     )
 

@@ -69,6 +69,22 @@ def update_habit(habit_id):
     db.session.commit()
     return jsonify(habit.to_dict()), 200
 
+@habits_bp.route("/<int:habit_id>", methods=["PATCH"])
+@jwt_required()
+def patch_habit(habit_id):
+    user = get_current_user()
+    habit = Habit.query.filter_by(id = habit_id, user_id= user.id).first_or_404()
+    data = request.get_json() or {}
+
+    if "name" in data:
+        habit.name = data["name"].strip()
+    if "description" in data:
+        habit.description = data["description"].strip()
+
+    db.session.commit()
+    return jsonify(habit.to_dict()), 200
+
+
 @habits_bp.route("/<int:habit_id>", methods=["DELETE"])
 @jwt_required()
 def delete_habit(habit_id):
@@ -76,7 +92,7 @@ def delete_habit(habit_id):
     habit = Habit.query.filter_by(id = habit_id, user_id= user.id).first_or_404()
     habit.is_active = False
     db.session.commit()
-    return jsonify({"message": f"Навикът '{habit.name}' е изтрит"}), 200
+    return '', 204
 
 @habits_bp.route("/<int:habit_id>/stats", methods=["GET"])
 @jwt_required()
