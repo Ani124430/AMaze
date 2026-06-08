@@ -31,6 +31,9 @@ def login():
     if not data:
         return jsonify({"error": "Няма данни"}), 400
     
+    if not data.get("username"):         
+        return jsonify({"error": "username е задължително"}), 400
+    
     user = User.query.filter_by(username=data["username"]).first()
     if not user or not user.check_password(data.get("password", "")):
         return jsonify({"error": "Невалидни данни за вход"}), 401

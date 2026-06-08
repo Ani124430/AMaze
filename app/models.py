@@ -45,7 +45,37 @@ class Habit(db.Model):
             "created_at": self.created_at.isoformat(),
             "is_active": self.is_active,
         }
-    
+    def completed_today(self):
+        return any(log.date == date.today() for log in self.logs)
+
+    def current_streak(self):
+        if not self.logs:
+            return 0
+        sorted_dates = sorted(set(log.date for log in self.logs), reverse = True) 
+        streak = 0
+        check_date = date.today()
+        for log_date in sorted_dates:
+            if log_date == check_date:  
+                streak+=1
+                check_date -= timedelta(days=1)
+            elif log_date <check_date:
+                break
+            return streak 
+        
+    def best_streak(self):
+        if not self.logs:
+            return 0
+        sorted_dates = sorted(set(log.date for log in self.logs))
+        best = 1
+        current =1 
+        for i in range(1, len(sorted_dates)):
+            if(sorted_dates[i] - sorted_dates[i-1]).days == 1:
+                current +=1
+                best = max(best, current)
+            else:
+                current = 1
+            return best 
+        
 class HabitLog(db.Model):
     __tablename__ = "habit_logs"
 
